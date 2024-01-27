@@ -57,7 +57,7 @@ class Driver;
     repeat(5) @(posedge vif.clk);
     vif.rst <= 1'b0;
     @(posedge vif.clk);
-    $display("[DRV : Reset Done]");
+    $display("[DRV] : Reset Done");
   endtask
 
   task run();
