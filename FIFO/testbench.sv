@@ -74,6 +74,8 @@ class Driver;
         vif.wr  <= 1'b0;
         @(posedge vif.clk);
         vif.rd  <= 1'b0;
+        $display("[DRV] : Data read data");
+        @(posedge vif.clk);
     endtask
 
     task run();
@@ -108,7 +110,7 @@ class Monitor;
             tr.full = vif.full;
             tr.empty = vif.empty;
             @(posedge vif.clk);
-            tr.dout <= vif.dout;
+            tr.dout = vif.dout; // Using blocking assignment in monitor!!!
 
             mbx.put(tr);
             $display("[MON] : Wr:%0d rd:%0d din:%0d dout:%0d full:%0d empty:%0d", tr.wr, tr.rd, tr.din, tr.dout, tr.full, tr.empty);
