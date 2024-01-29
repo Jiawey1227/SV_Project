@@ -1,7 +1,8 @@
 class Transaction;
     bit wr, rd;
     bit full, empty;
-    bit [7:0] din, dout;
+    rand bit [7:0] din;
+    bit [7:0] dout;
     rand bit oper;
 
     constraint oper_c {
@@ -55,12 +56,12 @@ class Driver;
         $display("-----------------------------");
     endtask
 
-    task write();
+    task write(ref Transaction tr);
         @(posedge vif.clk);
         vif.rst <= 1'b0;
         vif.rd  <= 1'b0;
         vif.wr  <= 1'b1;
-        vif.din <= $urandom_range(1, 10);
+        vif.din <= tr.din;
       	@(posedge vif.clk);
         vif.wr  <= 1'b0;
         $display("[DRV] : DATA WRITE data : %0d", vif.din);
@@ -82,7 +83,7 @@ class Driver;
         forever begin
             mbx.get(tr);
             if (tr.oper) begin
-                write();
+                write(tr);
             end
             else begin
                 read();
