@@ -1,12 +1,12 @@
 class Transaction;
-    bit wr, rd;
+    rand bit wr, rd;
     bit full, empty;
     rand bit [7:0] din;
     bit [7:0] dout;
-    rand bit oper;
 
-    constraint oper_c {
-        oper dist {1 :/ 50, 0 :/ 50};
+    constraint wr_rd_c {
+        wr dist {1:/70, 0:/30};
+        (wr == 1) <-> (rd == 0);
     }
 endclass //Transaction
 
@@ -56,38 +56,47 @@ class Driver;
         $display("-----------------------------");
     endtask
 
-    task write(ref Transaction tr);
-        @(posedge vif.clk);
-        vif.rst <= 1'b0;
-        vif.rd  <= 1'b0;
-        vif.wr  <= 1'b1;
-        vif.din <= tr.din;
-      	@(posedge vif.clk);
-        vif.wr  <= 1'b0;
-        $display("[DRV] : DATA WRITE data : %0d", vif.din);
-      	@(posedge vif.clk);
-    endtask
+    // task write(ref Transaction tr);
+    //     @(posedge vif.clk);
+    //     vif.rst <= 1'b0;
+    //     vif.rd  <= 1'b0;
+    //     vif.wr  <= 1'b1;
+    //     vif.din <= tr.din;
+    //   	@(posedge vif.clk);
+    //     vif.wr  <= 1'b0;
+    //     $display("[DRV] : DATA WRITE data : %0d", vif.din);
+    //   	@(posedge vif.clk);
+    // endtask
 
-    task read();
-        @(posedge vif.clk);
-        vif.rst <= 1'b0;
-        vif.rd  <= 1'b1;
-        vif.wr  <= 1'b0;
-        @(posedge vif.clk);
-        vif.rd  <= 1'b0;
-        $display("[DRV] : Data read data");
-        @(posedge vif.clk);
-    endtask
+    // task read(ref Transaction tr);
+    //     @(posedge vif.clk);
+    //     vif.rst <= 1'b0;
+    //     vif.rd  <= 1'b1;
+    //     vif.wr  <= 1'b0;
+    //     @(posedge vif.clk);
+    //     vif.rd  <= 1'b0;
+    //     $display("[DRV] : Data read data");
+    //     @(posedge vif.clk);
+    // endtask
 
     task run();
         forever begin
             mbx.get(tr);
-            if (tr.oper) begin
-                write(tr);
+            @(posedge vif.clk);
+            vif.rst <= 1'b0;
+            vif.rd  <= tr.rd;
+            vif.wr  <= tr.wr;
+            vif.din <= tr.din;
+            @(posedge vif.clk);
+            vif.wr <= 1'b0;
+            vif.rd <= 1'b0;
+            if (tr.wr) begin
+                $display("[DRV] : DATA WRITE data : %0d", vif.din);
             end
             else begin
-                read();
+                $display("[DRV] : Data read data");
             end
+            @(posedge vif.clk);
         end
     endtask
 endclass
