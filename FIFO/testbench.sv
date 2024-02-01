@@ -29,7 +29,7 @@ class Generator;
             assert (tr.randomize) else $error("Randomization Failed");
             i++;
             mbx.put(tr);
-            $display("[GEN] : Oper : %0d iteration : %0d", tr.oper, i);
+            $display("[GEN] : Oper : %0d iteration : %0d", tr.wr, i);
             @(next);
         end -> done;
     endtask
