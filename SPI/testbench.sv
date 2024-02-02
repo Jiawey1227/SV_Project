@@ -4,10 +4,6 @@ class Transaction;
     
     bit mosi;
 
-    function void display(string tag);
-      $display("[%0s] : newd : %0b, din : %0b, mosi : %0b", tag, newd, din, mosi, $time);
-    endfunction
-
 endclass
 
 class Generator;
@@ -28,7 +24,7 @@ class Generator;
         repeat(count) begin
             assert(tr.randomize) else $error("[GEN]:Randomization Failed");
             mbx.put(tr);
-            tr.display("GEN");
+          	$display("[GEN] : newd: %0d, din: %b, mosi: %0d", tr.newd, tr.din, tr.mosi, $time);
             @(drvnext);
             @(scbnext);
         end
@@ -56,7 +52,7 @@ class Driver;
       	repeat(10) @(posedge vif.clk);
         vif.rst <= 1'b0;
         @(posedge vif.clk);
-      	$display("[DRV]: newd: %0d, din: %0d, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi);
+      	$display("[DRV] : newd: %0d, din: %b, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi);
       	$display("[DRV] : Reset Done", $time);
         $display("--------------------");
     endtask
@@ -69,11 +65,10 @@ class Driver;
             vif.din  <= tr.din;
             mbxds.put(tr.din);
             @(posedge vif.sclk);
-          	$display("[DRV]: newd: %0d, din: %0d, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi, $time);
-            wait(vif.cs == 1'b1);
-          	$display("[DRV]: End transaction", $time);
-            vif.newd <= 1'b0;    
-            tr.display("DRV");
+          	$display("[DRV] : newd: %0d, din: %b, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi, $time);
+          	@(monnext);
+            vif.newd <= 1'b0;
+          	@(posedge vif.sclk);
             -> drvnext;
         end
     endtask
@@ -95,14 +90,15 @@ class Monitor;
           wait(vif.cs == 1'b0); // Start transaction
           @(posedge vif.sclk);
           for (int i = 0; i < 12; i++)  begin
-            @(posedge vif.sclk);
+            @(posedge vif.sclk); // Must wait for a clock cycle!!!
             srx[i] = vif.mosi;
-            $display("[MON]: newd: %0d, din: %0d, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi, $time);
-            $display("[MON]:data received: %0d", vif.mosi, $time);
+            $display("[MON] : newd: %0d, din: %b, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi, $time);
+            $display("[MON] : data received: %0d", vif.mosi, $time);
           end
           wait(vif.cs == 1'b1); // End transaction
           mbx.put(srx);
-          $display("[MON]:Data Sent: %0d", srx, $time);
+          $display("[MON] : newd: %0d, din: %b, cs: %0d, mosi: %0d", vif.newd, vif.din, vif.cs, vif.mosi, $time);
+          $display("[MON] : Data Sent: %b", srx, $time);
         end
     endtask
 
@@ -125,9 +121,9 @@ class Scoreboard;
         forever begin
             mbxds.get(ds);
             mbxms.get(ms);
-            $display("[SCB]:Received from [DRV]:%0d, [MON]:%0d", ds, ms);
-            $display("------------------------------------------------");
             -> scbnext;
+          	$display("[SCB] : Received from [DRV]:%0d, [MON]:%0d", ds, ms);
+            $display("------------------------------------------------");
         end
     endtask
 
