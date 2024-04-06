@@ -14,7 +14,24 @@ module uart_top #(
     output donerx
 );
 
-    
+    // Instantiate uarttx
+    uarttx #(clk_freq, baud_rate) utx (
+        .clk(clk),
+        .rst(rst),
+        .newd(newd),
+        .tx_data(dintx),
+        .tx(tx),
+        .donetx(donetx)
+    );
+
+    // Instantiate uartrx
+    uartrx #(clk_freq, baud_rate) rtx (
+        .clk(clk),
+        .rst(rst),
+        .rx(rx),
+        .donerx(donerx),
+        .doutrx(doutrx)
+    );
 
 endmodule
 
@@ -41,7 +58,7 @@ module uarttx #(
     parameter transfer = 2'b10;
 
 
-    reg [2:0] current_state, next_state;
+    reg [1:0] state;
 
     // uart_clock_gen
     always @(posedge clk) begin
@@ -102,7 +119,7 @@ module uartrx #(
     input clk, rst,
     input rx,
     output reg [7:0] rxdata,
-    output reg done;
+    output reg done
 );
 
     localparam clkcount = (clk_freq/baud_rate);
@@ -117,7 +134,7 @@ module uartrx #(
     parameter start = 2'b10;
 
 
-    reg [2:0] current_state, next_state;
+    reg [1:0] state;
 
     // uart_clock_gen
     always @(posedge clk) begin
@@ -161,3 +178,17 @@ module uartrx #(
     end
 
 endmodule
+
+interface uart_if;
+    logic clk;
+    logic uclktx;
+    logic uclkrx;
+    logic rst;
+    logic rx;
+    logic [7:0] dintx;
+    logic newd;
+    logic tx;
+    logic [7:0] doutrx;
+    logic donetx;
+    logic donerx;
+endinterface
