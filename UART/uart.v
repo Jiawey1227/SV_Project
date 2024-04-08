@@ -29,8 +29,8 @@ module uart_top #(
         .clk(clk),
         .rst(rst),
         .rx(rx),
-        .donerx(donerx),
-        .doutrx(doutrx)
+        .rxdata(doutrx),
+        .done(donerx)
     );
 
 endmodule
